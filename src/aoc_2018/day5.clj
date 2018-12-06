@@ -20,21 +20,19 @@
   [s1 s2]
   (= (str/lower-case s1) (str/lower-case s2)))
 
-(defn filter-polymers
-  [coll]
-  (lazy-seq
-   (when (seq coll)
-     (let [[x y] coll]
-       (if (and x y (str= x y) (opposite-case? x y))
-         (filter-polymers (nthrest coll 2))
-         (cons x (filter-polymers (rest coll))))))))
-
 (defn cancel-polymers
   [s]
-  (let [simplified (into [] (filter-polymers s))]
-    (if (= (count s) (count simplified))
-      (apply str simplified)
-      (recur simplified))))
+  (loop [sseq  (seq s)
+         final (transient [])]
+    (if (seq sseq)
+      (let [prev (get final (dec (count final)))
+            [x y] sseq]
+        (if (and x y (str= x y) (opposite-case? x y))
+          (if prev
+            (recur (cons prev (nthrest sseq 2)) (pop! final))
+            (recur (nthrest sseq 2) final))
+          (recur (rest sseq) (conj! final x))))
+      (apply str (persistent! final)))))
 
 (defn part1
   ([]
