@@ -44,6 +44,27 @@
         (cancel-polymers)
         (count))))
 
+(defn part2
+  ([]
+   (part2 "day5/input.txt"))
+  ([input-filename]
+   (let [input           (->> (io/resource input-filename)
+                              (slurp)
+                              (drop-last 1))
+         unique-polymers (into #{} (map str/lower-case) input)]
+     (->> unique-polymers
+          (map (fn [lower]
+                 (let [upper (str/upper-case lower)]
+                   (->> input
+                        (remove (fn [c]
+                                  (let [s (str c)]
+                                    (or (= upper (str s)) (= lower (str s))))))
+                        (cancel-polymers)
+                        (count)
+                        (vector lower)))))
+          (apply min-key second)
+          (second)))))
+
 (comment
   (part1)
 
